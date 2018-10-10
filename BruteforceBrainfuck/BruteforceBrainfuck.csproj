@@ -42,6 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Interpreter\InvalidProgramException.cs" />
+    <Compile Include="Interpreter\Nodes\INode.cs" />
+    <Compile Include="Interpreter\Nodes\InputNode.cs" />
+    <Compile Include="Interpreter\Nodes\OutputNode.cs" />
+    <Compile Include="Interpreter\Nodes\RootNode.cs" />
+    <Compile Include="Interpreter\BFProgram.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
