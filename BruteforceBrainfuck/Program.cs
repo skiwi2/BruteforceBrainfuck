@@ -12,7 +12,7 @@ namespace BruteforceBrainfuck
     {
         static void Main(string[] args)
         {
-            var program = new BFProgram(",.");
+            var program = new BFProgram("+[-->-[>>+>-----<<]<--<---]>-.>>>+.>>..+++[.>]<<<<.+++.------.<<-.>>>>+.");
             Console.WriteLine(program);
         }
     }

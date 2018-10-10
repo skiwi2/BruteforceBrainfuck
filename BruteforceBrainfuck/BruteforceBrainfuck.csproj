@@ -43,10 +43,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interpreter\InvalidProgramException.cs" />
+    <Compile Include="Interpreter\Nodes\DecrementNode.cs" />
+    <Compile Include="Interpreter\Nodes\IncrementNode.cs" />
     <Compile Include="Interpreter\Nodes\INode.cs" />
     <Compile Include="Interpreter\Nodes\InputNode.cs" />
+    <Compile Include="Interpreter\Nodes\MoveLeftNode.cs" />
     <Compile Include="Interpreter\Nodes\OutputNode.cs" />
-    <Compile Include="Interpreter\Nodes\RootNode.cs" />
+    <Compile Include="Interpreter\Nodes\MoveRightNode.cs" />
+    <Compile Include="Interpreter\Nodes\LoopNode.cs" />
     <Compile Include="Interpreter\BFProgram.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

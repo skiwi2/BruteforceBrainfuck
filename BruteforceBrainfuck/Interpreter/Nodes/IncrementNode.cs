@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace BruteforceBrainfuck.Interpreter.Nodes
 {
-    public class RootNode
+    public class IncrementNode : INode
     {
-        public ICollection<INode> Children { get; private set; }
-
-        public RootNode(ICollection<INode> children)
+        public IncrementNode()
         {
-            Children = children;
+
         }
     }
 }

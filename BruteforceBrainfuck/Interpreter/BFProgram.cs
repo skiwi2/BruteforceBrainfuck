@@ -10,14 +10,14 @@ namespace BruteforceBrainfuck.Interpreter
 {
     public class BFProgram
     {
-        private RootNode RootNode { get; set; }
+        private INode RootNode { get; set; }
 
         public BFProgram(string programText)
         {
             RootNode = CreateProgram(programText);
         }
 
-        private static RootNode CreateProgram(string programText)
+        private static INode CreateProgram(string programText)
         {
             var enumerator = programText.GetEnumerator();
             var nodes = new List<INode>();
@@ -25,20 +25,41 @@ namespace BruteforceBrainfuck.Interpreter
             {
                 nodes.Add(NextNode(enumerator));
             }
-            return new RootNode(nodes);
+            return new LoopNode(nodes);
         }
 
         private static INode NextNode(CharEnumerator enumerator)
         {
             do
             {
-                var symbol = enumerator.Current;
-                switch (symbol)
+                switch (enumerator.Current)
                 {
+                    case '>':
+                        return new MoveRightNode();
+                    case '<':
+                        return new MoveLeftNode();
+                    case '+':
+                        return new IncrementNode();
+                    case '-':
+                        return new DecrementNode();
                     case ',':
                         return new InputNode();
                     case '.':
                         return new OutputNode();
+                    case '[':
+                        var nodes = new List<INode>();
+                        while (enumerator.MoveNext())
+                        {
+                            switch (enumerator.Current)
+                            {
+                                case ']':
+                                    return new LoopNode(nodes);
+                                default:
+                                    nodes.Add(NextNode(enumerator));
+                                    break;
+                            }
+                        }
+                        throw new InvalidProgramException("Expected more symbols after encoutnering a loop begin symbol");
                     default:
                         break;
                 }
