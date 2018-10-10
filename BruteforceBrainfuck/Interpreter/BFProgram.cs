@@ -12,9 +12,66 @@ namespace BruteforceBrainfuck.Interpreter
     {
         private INode RootNode { get; set; }
 
-        public BFProgram(string programText)
+        private BFMemory Memory { get; set; }
+
+        public BFProgram(string programText, BFMemory memory)
         {
             RootNode = CreateProgram(programText);
+            Memory = memory;
+        }
+
+        public ICollection<byte> Execute(IEnumerable<byte> input)
+        {
+            var output = new List<byte>();
+            switch (RootNode)
+            {
+                case LoopNode loopNode:
+                    ExecuteImpl(RootNode as LoopNode, input.GetEnumerator(), output);
+                    break;
+                default:
+                    throw new InvalidProgramException("Expected loop node");
+            }
+            return output;
+        }
+
+        private void ExecuteImpl(LoopNode loopNode, IEnumerator<byte> inputEnumerator, ICollection<byte> output)
+        {
+            foreach (var node in loopNode.Children)
+            {
+                switch (node)
+                {
+                    case MoveRightNode moveRightNode:
+                        Memory.MoveRight();
+                        break;
+                    case MoveLeftNode moveLeftNode:
+                        Memory.MoveLeft();
+                        break;
+                    case IncrementNode incrementNode:
+                        Memory.Increment();
+                        break;
+                    case DecrementNode decrementNode:
+                        Memory.Decrement();
+                        break;
+                    case InputNode inputNode:
+                        if (!inputEnumerator.MoveNext())
+                        {
+                            throw new InvalidProgramException("No input available anymore");
+                        }
+                        Memory.SetValue(inputEnumerator.Current);
+                        break;
+                    case OutputNode outputNode:
+                        output.Add(Memory.GetValue());
+                        break;
+                    case LoopNode innerLoopNode:
+                        while (Memory.GetValue() > 0)
+                        {
+                            ExecuteImpl(innerLoopNode, inputEnumerator, output);
+                        }
+                        break;
+                    default:
+                        throw new InvalidProgramException("Unexpected child node");
+                }
+            }
         }
 
         private static INode CreateProgram(string programText)
@@ -59,7 +116,7 @@ namespace BruteforceBrainfuck.Interpreter
                                     break;
                             }
                         }
-                        throw new InvalidProgramException("Expected more symbols after encoutnering a loop begin symbol");
+                        throw new InvalidProgramException("Expected more symbols after encountering a loop begin symbol");
                     default:
                         break;
                 }
