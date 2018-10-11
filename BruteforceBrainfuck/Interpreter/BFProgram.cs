@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using BruteforceBrainfuck.Interpreter.Nodes;
@@ -22,7 +23,7 @@ namespace BruteforceBrainfuck.Interpreter
             Memory = memory;
         }
 
-        public ICollection<byte> Execute(IEnumerable<byte> input)
+        public ICollection<byte> Execute(IEnumerable<byte> input, CancellationToken cancellationToken)
         {
             if (Executions++ > 0)
             {
@@ -32,18 +33,22 @@ namespace BruteforceBrainfuck.Interpreter
             switch (RootNode)
             {
                 case LoopNode loopNode:
-                    ExecuteImpl(loopNode, input.GetEnumerator(), output);
+                    ExecuteImpl(loopNode, input.GetEnumerator(), output, cancellationToken);
                     break;
                 default:
-                    throw new InvalidBFProgramException("Expected loop node");
+                    throw new InvalidBFProgramException("Expected loop node", false);
             }
             return output;
         }
 
-        private void ExecuteImpl(LoopNode loopNode, IEnumerator<byte> inputEnumerator, ICollection<byte> output)
+        private void ExecuteImpl(LoopNode loopNode, IEnumerator<byte> inputEnumerator, ICollection<byte> output, CancellationToken cancellationToken)
         {
             foreach (var node in loopNode.Children)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    throw new InvalidBFProgramException("Cancellation requested", false);
+                }
                 switch (node)
                 {
                     case MoveRightNode moveRightNode:
@@ -61,7 +66,7 @@ namespace BruteforceBrainfuck.Interpreter
                     case InputNode inputNode:
                         if (!inputEnumerator.MoveNext())
                         {
-                            throw new InvalidBFProgramException("No input available anymore");
+                            throw new InvalidBFProgramException("No input available anymore", false);
                         }
                         Memory.SetValue(inputEnumerator.Current);
                         break;
@@ -71,11 +76,15 @@ namespace BruteforceBrainfuck.Interpreter
                     case LoopNode innerLoopNode:
                         while (Memory.GetValue() > 0)
                         {
-                            ExecuteImpl(innerLoopNode, inputEnumerator, output);
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                throw new InvalidBFProgramException("Cancellation requested", false);
+                            }
+                            ExecuteImpl(innerLoopNode, inputEnumerator, output, cancellationToken);
                         }
                         break;
                     default:
-                        throw new InvalidBFProgramException("Unexpected child node");
+                        throw new InvalidBFProgramException("Unexpected child node", false);
                 }
             }
         }
@@ -135,7 +144,9 @@ namespace BruteforceBrainfuck.Interpreter
                                     break;
                             }
                         }
-                        throw new InvalidBFProgramException("Expected more symbols after encountering a loop begin symbol");
+                        throw new InvalidBFProgramException("Expected more symbols after encountering a loop begin symbol", true);
+                    case ']':
+                        throw new InvalidBFProgramException("Encountered a loop end symbol without matching loop begin", false);
                     default:
                         break;
                 }
