@@ -10,15 +10,20 @@ namespace BruteforceBrainfuck.Interpreter
     {
         private uint MemorySize { get; set; }
 
-        private byte[] Cells { get; set; }
-
         private uint Pointer { get; set; }
+
+        private byte[] Cells { get; set; }
 
         public BFMemory(uint memorySize)
         {
             MemorySize = memorySize;
-            Cells = new byte[memorySize];
             Pointer = 0;
+            Reset();
+        }
+
+        public void Reset()
+        {
+            Cells = new byte[MemorySize];
         }
 
         public void MoveRight()

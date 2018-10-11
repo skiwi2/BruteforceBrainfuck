@@ -14,6 +14,8 @@ namespace BruteforceBrainfuck.Interpreter
 
         private BFMemory Memory { get; set; }
 
+        private uint Executions { get; set; }
+
         public BFProgram(string programText, BFMemory memory)
         {
             RootNode = CreateProgram(programText);
@@ -22,6 +24,10 @@ namespace BruteforceBrainfuck.Interpreter
 
         public ICollection<byte> Execute(IEnumerable<byte> input)
         {
+            if (Executions++ > 0)
+            {
+                Memory.Reset();
+            }
             var output = new List<byte>();
             switch (RootNode)
             {
@@ -29,7 +35,7 @@ namespace BruteforceBrainfuck.Interpreter
                     ExecuteImpl(loopNode, input.GetEnumerator(), output);
                     break;
                 default:
-                    throw new InvalidProgramException("Expected loop node");
+                    throw new InvalidBFProgramException("Expected loop node");
             }
             return output;
         }
@@ -55,7 +61,7 @@ namespace BruteforceBrainfuck.Interpreter
                     case InputNode inputNode:
                         if (!inputEnumerator.MoveNext())
                         {
-                            throw new InvalidProgramException("No input available anymore");
+                            throw new InvalidBFProgramException("No input available anymore");
                         }
                         Memory.SetValue(inputEnumerator.Current);
                         break;
@@ -69,7 +75,7 @@ namespace BruteforceBrainfuck.Interpreter
                         }
                         break;
                     default:
-                        throw new InvalidProgramException("Unexpected child node");
+                        throw new InvalidBFProgramException("Unexpected child node");
                 }
             }
         }
@@ -129,7 +135,7 @@ namespace BruteforceBrainfuck.Interpreter
                                     break;
                             }
                         }
-                        throw new InvalidProgramException("Expected more symbols after encountering a loop begin symbol");
+                        throw new InvalidBFProgramException("Expected more symbols after encountering a loop begin symbol");
                     default:
                         break;
                 }
