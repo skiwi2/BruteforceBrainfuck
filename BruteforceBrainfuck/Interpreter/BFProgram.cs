@@ -26,7 +26,7 @@ namespace BruteforceBrainfuck.Interpreter
             switch (RootNode)
             {
                 case LoopNode loopNode:
-                    ExecuteImpl(RootNode as LoopNode, input.GetEnumerator(), output);
+                    ExecuteImpl(loopNode, input.GetEnumerator(), output);
                     break;
                 default:
                     throw new InvalidProgramException("Expected loop node");
@@ -80,29 +80,38 @@ namespace BruteforceBrainfuck.Interpreter
             var nodes = new List<INode>();
             while (enumerator.MoveNext())
             {
-                nodes.Add(NextNode(enumerator));
+                if (NextNode(enumerator, out var nextNode))
+                {
+                    nodes.Add(nextNode);
+                }
             }
             return new LoopNode(nodes);
         }
 
-        private static INode NextNode(CharEnumerator enumerator)
+        private static bool NextNode(CharEnumerator enumerator, out INode node)
         {
             do
             {
                 switch (enumerator.Current)
                 {
                     case '>':
-                        return new MoveRightNode();
+                        node = new MoveRightNode();
+                        return true;
                     case '<':
-                        return new MoveLeftNode();
+                        node = new MoveLeftNode();
+                        return true;
                     case '+':
-                        return new IncrementNode();
+                        node = new IncrementNode();
+                        return true;
                     case '-':
-                        return new DecrementNode();
+                        node = new DecrementNode();
+                        return true;
                     case ',':
-                        return new InputNode();
+                        node = new InputNode();
+                        return true;
                     case '.':
-                        return new OutputNode();
+                        node = new OutputNode();
+                        return true;
                     case '[':
                         var nodes = new List<INode>();
                         while (enumerator.MoveNext())
@@ -110,9 +119,13 @@ namespace BruteforceBrainfuck.Interpreter
                             switch (enumerator.Current)
                             {
                                 case ']':
-                                    return new LoopNode(nodes);
+                                    node = new LoopNode(nodes);
+                                    return true;
                                 default:
-                                    nodes.Add(NextNode(enumerator));
+                                    if (NextNode(enumerator, out var nextNode))
+                                    {
+                                        nodes.Add(nextNode);
+                                    }
                                     break;
                             }
                         }
@@ -122,7 +135,8 @@ namespace BruteforceBrainfuck.Interpreter
                 }
             }
             while (enumerator.MoveNext());
-            return null;
+            node = null;
+            return false;
         }
     }
 }
