@@ -30,6 +30,25 @@ namespace BruteforceBrainfuck
 
         public string ComputeProgram()
         {
+            var syncRoot = new object();
+            string result = null;
+
+            string GetResultSafe()
+            {
+                lock (syncRoot)
+                {
+                    return result;
+                }
+            }
+
+            void SetResultSafe(string newResult)
+            {
+                lock (syncRoot)
+                {
+                    result = result ?? newResult;
+                }
+            }
+
             var blockingQueue = new BlockingCollection<string>();
             foreach (var symbol in Symbols)
             {
@@ -37,6 +56,10 @@ namespace BruteforceBrainfuck
             }
             foreach (var program in blockingQueue.GetConsumingEnumerable())
             {
+                if (GetResultSafe() != null)
+                {
+                    break;
+                }
                 var cancellationToken = new CancellationTokenSource(MaxTime).Token;
                 Task.Run(() =>
                 {
@@ -44,6 +67,7 @@ namespace BruteforceBrainfuck
                     if (VerifyProgram(program, cancellationToken, out var shouldContinue))
                     {
                         Console.WriteLine("Found program: " + program);
+                        SetResultSafe(program);
                     }
                     if (shouldContinue)
                     {
@@ -58,7 +82,7 @@ namespace BruteforceBrainfuck
                     }
                 }, cancellationToken);
             }
-            return null;
+            return GetResultSafe();
         }
 
         private bool VerifyProgram(string programText, CancellationToken cancellationToken, out bool shouldContinue)
